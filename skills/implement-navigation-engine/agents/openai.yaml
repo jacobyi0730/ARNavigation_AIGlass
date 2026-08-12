@@ -1,0 +1,4 @@
+interface:
+  display_name: "Navigation Engine"
+  short_description: "Build and test location, heading, and navigation logic"
+  default_prompt: "Use $implement-navigation-engine to implement and test a navigation-engine task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Retrospective"
+  short_description: "Record failures, decisions, lessons, and prevention steps"
+  default_prompt: "Use $record-retrospective to record a failure, decision, or reusable lesson."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Map Workflow"
+  short_description: "Build Maps Compose destination and waypoint workflows"
+  default_prompt: "Use $implement-map-workflow to implement the selected Google Maps workflow."

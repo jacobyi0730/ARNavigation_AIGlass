@@ -1,0 +1,4 @@
+interface:
+  display_name: "ARNavigation Orchestrator"
+  short_description: "Coordinate ARNavigation tasks and specialist agents"
+  default_prompt: "Use $orchestrate-arnavigation to coordinate the next ARNavigation implementation task."

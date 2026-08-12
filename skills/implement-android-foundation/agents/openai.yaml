@@ -1,0 +1,4 @@
+interface:
+  display_name: "Android Foundation"
+  short_description: "Build Compose foundation, permissions, and lifecycle"
+  default_prompt: "Use $implement-android-foundation to implement the selected Android foundation task."

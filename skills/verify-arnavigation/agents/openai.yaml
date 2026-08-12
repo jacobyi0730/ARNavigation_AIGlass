@@ -1,0 +1,4 @@
+interface:
+  display_name: "ARNavigation Verification"
+  short_description: "Verify builds, tests, acceptance, and device behavior"
+  default_prompt: "Use $verify-arnavigation to verify the current ARNavigation change."

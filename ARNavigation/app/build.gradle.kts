@@ -1,7 +1,24 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+val secretsProperties = Properties()
+val secretsFile = rootProject.file("secrets.properties")
+
+if (secretsFile.exists()) {
+    secretsFile.inputStream().use(secretsProperties::load)
+}
+
+fun readSecret(name: String): String =
+    providers.gradleProperty(name).orNull
+        ?: secretsProperties.getProperty(name)
+        ?: System.getenv(name)
+        ?: ""
+
+val mapsApiKey = readSecret("MAPS_API_KEY")
 
 android {
     namespace = "com.wjs.arnav"
@@ -17,6 +34,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {
@@ -32,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -43,6 +62,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.google.maps.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

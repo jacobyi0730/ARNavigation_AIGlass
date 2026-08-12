@@ -1,0 +1,4 @@
+interface:
+  display_name: "AR Guidance"
+  short_description: "Build ARCore plane tracking and 3D direction guidance"
+  default_prompt: "Use $implement-ar-guidance to implement the selected AR guidance task."
