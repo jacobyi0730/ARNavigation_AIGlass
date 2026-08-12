@@ -74,6 +74,20 @@ API 키, 인증 비밀, 정밀 위치와 개인정보는 기록하지 않는다.
   - [x] Kotlin 버전 상향 후 `assembleDebug` 재실행
 - 관련 경로: `ARNavigation/gradle/libs.versions.toml`
 
+### RET-2026-08-12-005: Kotlin 버전 변경 직후 daemon 증분 캐시 충돌
+
+- 상태: Resolved
+- 단계: 단계 0 `S00-T008`, `S00-T009`
+- 맥락: Kotlin 버전을 `2.4.10`으로 올린 직후 기존 daemon 상태에서 다시 빌드를 검증했다.
+- 증상/증거: 일반 `testDebugUnitTest`와 `assembleDebug` 실행에서 `Storage ... is already registered`, `Could not close incremental caches` 오류가 발생했다.
+- 영향: 실제 코드 오류와 무관한 캐시 문제 때문에 AR 스파이크 검증 결과를 신뢰하기 어려웠다.
+- 근본 원인: Kotlin/Gradle daemon이 버전 변경 전 증분 캐시 상태를 잡고 있어 새 컴파일러 상태와 충돌한 것으로 보인다.
+- 해결: `clean`과 `--no-daemon` 기준으로 다시 빌드해 캐시를 초기화했고 `assembleDebug`를 성공시켰다.
+- 재발 방지: Kotlin 또는 Compose compiler 계열 버전을 바꾼 직후 첫 검증은 `clean`과 `--no-daemon` 기준으로 한 번 실행한다.
+- 후속 조치:
+  - [x] `clean assembleDebug --no-daemon` 재검증
+- 관련 경로: `ARNavigation/gradle/libs.versions.toml`
+
 ### RET-2026-08-12-001: 스킬 UI 설명 길이 검증 실패
 
 - 상태: Resolved
@@ -119,6 +133,43 @@ API 키, 인증 비밀, 정밀 위치와 개인정보는 기록하지 않는다.
   - [x] 단계 미완료 목록 조회 검증
   - [x] 단일 작업 ID와 DOD ID 조회 검증
 - 관련 경로: `tools/todo-status.ps1`
+
+### RET-2026-08-12-006: CameraX 프리뷰는 열려도 ADB screencap 검증은 불안정할 수 있음
+
+- 상태: Open
+- 단계: 단계 0 `S00-T011`
+- 맥락: 실기기에서 `AR -> Map -> AR` 전환 후 카메라 pause/resume 을 검증했다.
+- 증상/증거:
+  - `adb shell dumpsys media.camera` 에서는 `DISCONNECT device 0 client for package com.wjs.arnav` 뒤에 다시 `CONNECT device 0 client for package com.wjs.arnav` 와 `Device 0 is open` 이 확인됐다.
+  - 같은 시점 `adb shell screencap -p` 결과 이미지에서는 AR 화면 미리보기가 검게 캡처됐다.
+- 영향: 카메라 리소스 반환과 재연결은 확인됐지만, 화면에 실제 프리뷰 프레임이 정상 복귀하는지 ADB 캡처만으로는 단정하기 어렵다.
+- 근본 원인: 추정. Samsung 기기 + CameraX `PreviewView` + ADB screencap 조합에서 프리뷰 레이어가 검게 캡처되거나, 복귀 시 프리뷰 렌더링이 늦게 붙을 가능성이 있다.
+- 해결: 이번 턴에서는 프로토타입의 직전 안정 구현으로 되돌리고 `S00-T011` 을 완료 처리하지 않았다.
+- 재발 방지:
+  - CameraX/ARCore 전환 검증에서는 `dumpsys media.camera` 와 화면 캡처를 함께 보되, 필요하면 사람이 직접 기기 화면을 보는 확인 절차를 추가한다.
+  - 전환 안정화 리팩터링은 별도 작은 변경으로 나누고, 첫 진입 프리뷰와 복귀 프리뷰를 각각 검증한다.
+- 후속 조치:
+  - [ ] `S00-T011` 재검증 시 첫 진입 화면과 복귀 화면을 모두 실기기 육안으로 확인
+  - [ ] 필요하면 `PreviewView` 수명주기 처리와 `lifecycle-runtime-compose` 기반 lifecycle owner 사용 검토
+- 관련 경로: `ARNavigation/app/src/main/java/com/wjs/arnav/spike/ArCoreSpikeScreen.kt`
+
+### RET-2026-08-12-007: Fused Location 사용 시 Play services 위치 의존성 누락으로 컴파일 실패
+
+- 상태: Resolved
+- 단계: 단계 8 `S08-T006`
+- 맥락: 지도 화면에 현재 위치 재중심 버튼을 추가하면서 `LocationServices.getFusedLocationProviderClient()`를 연결했다.
+- 증상/증거: `.\gradlew.bat testDebugUnitTest assembleDebug --no-daemon` 실행 시 `PrototypeMapScreen.kt`의 `LocationServices`와 `com.google.android.gms.location` import가 해석되지 않아 `compileDebugKotlin`이 실패했다.
+- 영향: 지도 현재 위치 버튼 구현이 코드상으로는 완료되어도 실제 빌드가 막혀 작업 완료 체크를 진행할 수 없었다.
+- 근본 원인: `libs.versions.toml`에는 지도 SDK만 연결되어 있었고, Fused Location API가 속한 `play-services-location` 의존성이 앱 모듈에 추가되지 않았다.
+- 해결: Version Catalog에 `play-services-location:21.4.0`을 추가하고 `app/build.gradle.kts`에 `implementation(libs.google.play.services.location)`를 연결한 뒤 빌드를 다시 통과시켰다.
+- 재발 방지:
+  - Google Maps Compose와 Fused Location을 함께 쓸 때는 지도 렌더링 의존성과 위치 공급자 의존성을 분리해서 확인한다.
+  - 새 SDK 타입 import를 추가한 직후에는 `assembleDebug --no-daemon`까지 바로 실행해 누락 의존성을 같은 작업 안에서 닫는다.
+- 후속 조치:
+  - [x] 위치 의존성 추가 후 `testDebugUnitTest` 통과 확인
+  - [x] 위치 의존성 추가 후 `assembleDebug` 통과 확인
+  - [x] 실기기에서 지도 화면과 `Current Location` 버튼 노출 확인
+- 관련 경로: `ARNavigation/gradle/libs.versions.toml`, `ARNavigation/app/build.gradle.kts`, `ARNavigation/app/src/main/java/com/wjs/arnav/prototype/PrototypeMapScreen.kt`
 
 ## 6. 새 회고 템플릿
 

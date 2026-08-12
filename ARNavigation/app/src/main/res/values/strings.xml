@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">ARNavigation</string>
+    <string name="ar_spike_title">AR prototype camera</string>
+    <string name="ar_spike_renderer_camera">Renderer: live rear camera preview</string>
+    <string name="ar_spike_availability_prefix">ARCore availability: %1$s</string>
+    <string name="ar_spike_open_map">Open Map</string>
+    <string name="ar_spike_permission_needed">Camera permission is required to show the AR preview.</string>
+    <string name="ar_spike_request_camera">Allow Camera</string>
+    <string name="map_permission_needed">Location permission is required to move the map to your current location.</string>
+    <string name="map_request_location">Allow Location</string>
+    <string name="map_recenter">Current Location</string>
 </resources>
