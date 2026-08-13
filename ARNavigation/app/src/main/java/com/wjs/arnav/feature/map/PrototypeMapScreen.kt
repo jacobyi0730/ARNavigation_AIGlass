@@ -22,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,14 +45,18 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.wjs.arnav.BuildConfig
 import com.wjs.arnav.R
+import com.wjs.arnav.domain.navigation.GeoCoordinate
+import com.wjs.arnav.domain.navigation.NavigationSessionState
 
 private val SeoulCityHall = LatLng(37.5663, 126.9779)
 
 @Composable
 fun PrototypeMapRoute(
     state: PrototypeMapState,
+    navigationSession: NavigationSessionState,
     onNavigateToAr: () -> Unit,
     onStateChange: (PrototypeMapState) -> Unit,
+    onStartNavigation: (GeoCoordinate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val cameraPositionState = rememberCameraPositionState {
@@ -67,9 +73,11 @@ fun PrototypeMapRoute(
 
     PrototypeMapScreen(
         state = state,
+        navigationSession = navigationSession,
         cameraPositionState = cameraPositionState,
         onNavigateToAr = onNavigateToAr,
         onStateChange = onStateChange,
+        onStartNavigation = onStartNavigation,
         modifier = modifier,
     )
 }
@@ -77,9 +85,11 @@ fun PrototypeMapRoute(
 @Composable
 private fun PrototypeMapScreen(
     state: PrototypeMapState,
+    navigationSession: NavigationSessionState,
     cameraPositionState: CameraPositionState,
     onNavigateToAr: () -> Unit,
     onStateChange: (PrototypeMapState) -> Unit,
+    onStartNavigation: (GeoCoordinate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -92,6 +102,7 @@ private fun PrototypeMapScreen(
     ) { granted ->
         hasLocationPermission.value = granted
     }
+    var startErrorMessage by remember { mutableStateOf<String?>(null) }
     val mapUiSettings = remember(hasLocationPermission.value) {
         MapUiSettings(
             myLocationButtonEnabled = false,
@@ -166,6 +177,18 @@ private fun PrototypeMapScreen(
                     MapEditMode.WAYPOINT -> stringResource(R.string.map_mode_waypoint)
                 },
             )
+            if (startErrorMessage != null) {
+                StatusCard(
+                    text = startErrorMessage!!,
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                )
+            }
+            if (navigationSession.isNavigating) {
+                StatusCard(
+                    text = stringResource(R.string.map_navigation_locked),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                )
+            }
         }
 
         Card(
@@ -201,14 +224,21 @@ private fun PrototypeMapScreen(
                 ) {
                     Button(
                         onClick = {
+                            if (navigationSession.isNavigating) {
+                                return@Button
+                            }
                             onStateChange(state.copy(editMode = MapEditMode.DESTINATION))
                         },
                         modifier = Modifier.weight(1f),
+                        enabled = !navigationSession.isNavigating,
                     ) {
                         Text(text = stringResource(R.string.map_button_destination))
                     }
                     Button(
                         onClick = {
+                            if (navigationSession.isNavigating) {
+                                return@Button
+                            }
                             val nextMode = if (state.editMode == MapEditMode.WAYPOINT) {
                                 MapEditMode.NONE
                             } else {
@@ -217,6 +247,7 @@ private fun PrototypeMapScreen(
                             onStateChange(state.copy(editMode = nextMode))
                         },
                         modifier = Modifier.weight(1f),
+                        enabled = !navigationSession.isNavigating,
                     ) {
                         Text(
                             text = if (state.editMode == MapEditMode.WAYPOINT) {
@@ -246,9 +277,13 @@ private fun PrototypeMapScreen(
                     }
                     OutlinedButton(
                         onClick = {
-                            onStateChange(PrototypeMapState())
+                            if (!navigationSession.isNavigating) {
+                                startErrorMessage = null
+                                onStateChange(PrototypeMapState())
+                            }
                         },
                         modifier = Modifier.weight(1f),
+                        enabled = !navigationSession.isNavigating,
                     ) {
                         Text(text = stringResource(R.string.map_button_reset))
                     }
@@ -258,6 +293,40 @@ private fun PrototypeMapScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    if (!navigationSession.isNavigating) {
+                        Button(
+                            onClick = {
+                                startErrorMessage = null
+                                val destination = state.destination
+                                if (destination == null) {
+                                    startErrorMessage = context.getString(R.string.map_start_requires_destination)
+                                    return@Button
+                                }
+                                if (!hasLocationPermission.value) {
+                                    permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                                    startErrorMessage = context.getString(R.string.map_start_requires_location)
+                                    return@Button
+                                }
+                                val client = LocationServices.getFusedLocationProviderClient(context)
+                                @Suppress("MissingPermission")
+                                client.lastLocation.addOnSuccessListener { location ->
+                                    if (location == null) {
+                                        startErrorMessage = context.getString(R.string.map_start_location_unavailable)
+                                        return@addOnSuccessListener
+                                    }
+                                    onStartNavigation(
+                                        GeoCoordinate(
+                                            latitude = location.latitude,
+                                            longitude = location.longitude,
+                                        ),
+                                    )
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(text = stringResource(R.string.map_button_start))
+                        }
+                    }
                     if (!hasLocationPermission.value) {
                         OutlinedButton(
                             onClick = {
@@ -272,7 +341,13 @@ private fun PrototypeMapScreen(
                         onClick = onNavigateToAr,
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(text = stringResource(R.string.map_button_back_to_ar))
+                        Text(
+                            text = if (navigationSession.isNavigating) {
+                                stringResource(R.string.map_button_return_to_ar)
+                            } else {
+                                stringResource(R.string.map_button_back_to_ar)
+                            },
+                        )
                     }
                 }
             }

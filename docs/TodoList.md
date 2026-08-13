@@ -42,8 +42,8 @@ rg -n "ARCore|권한|RET-" docs/Retrospective.md
 |---|---|
 | 현재 단계 | 단계 1: 프로젝트 및 빌드 기반 구성 |
 | 현재 단계 상태 | `in_progress` |
-| 활성 작업 | `S01-T023`, `S01-T024` |
-| 다음 후보 | `S01-T007`, `S01-T009` |
+| 활성 작업 | `S01-T007`, `S01-T009` |
+| 다음 후보 | 단계 1 완료 검토 |
 | 전체 구현 작업 | 단계 파일 15개, 체크박스 276개 |
 | 병렬 작업 체크리스트 | [coordination.md](./tasks/coordination.md) |
 | MVP 완료 정의 | [mvp-dod.md](./tasks/mvp-dod.md) |
@@ -124,8 +124,8 @@ rg -n "ARCore|권한|RET-" docs/Retrospective.md
  - [x] [S01-T020] 필요 시 화면 방향과 카메라 기능 요구사항을 Manifest에 설정한다.
  - [x] [S01-T021] `app`, `domain`, `data`, `feature/map`, `feature/ar`, `core/ui` 등 패키지 경계를 만든다.
  - [x] [S01-T022] `MainActivity`의 템플릿 UI를 제거하고 `ARNavigationApp` 루트 Composable로 교체한다.
- - [ ] [S01-T023] 공통 dispatcher/time provider를 추상화해 거리 유지 시간 로직을 테스트 가능하게 만든다.
- - [ ] [S01-T024] 개발용 로깅 정책을 만들고 정밀 위치 좌표가 release 로그에 남지 않게 한다.
+ - [x] [S01-T023] 공통 dispatcher/time provider를 추상화해 거리 유지 시간 로직을 테스트 가능하게 만든다.
+ - [x] [S01-T024] 개발용 로깅 정책을 만들고 정밀 위치 좌표가 release 로그에 남지 않게 한다.
  - [x] [S01-T025] `assembleDebug`가 성공한다.
  - [x] [S01-T026] `testDebugUnitTest`가 성공한다.
  - [x] [S01-T027] API 키가 없는 환경에서도 원인을 알 수 있는 빌드 또는 실행 오류를 제공한다.

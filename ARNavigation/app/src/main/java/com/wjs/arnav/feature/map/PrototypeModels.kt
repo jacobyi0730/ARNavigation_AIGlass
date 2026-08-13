@@ -1,6 +1,8 @@
 package com.wjs.arnav.feature.map
 
 import com.google.android.gms.maps.model.LatLng
+import com.wjs.arnav.domain.navigation.GeoCoordinate
+import com.wjs.arnav.domain.navigation.distanceMeters
 
 enum class MapEditMode {
     NONE,
@@ -59,23 +61,13 @@ fun PrototypeMapState.isDuplicatePoint(
     }
 
     return allPoints.any { existingPoint ->
-        distanceMeters(existingPoint, tappedPoint) < minimumSpacingMeters
+        distanceMeters(existingPoint.toGeoCoordinate(), tappedPoint.toGeoCoordinate()) < minimumSpacingMeters
     }
 }
 
-private fun distanceMeters(
-    first: LatLng,
-    second: LatLng,
-): Double {
-    val earthRadiusMeters = 6_371_000.0
-    val latDelta = Math.toRadians(second.latitude - first.latitude)
-    val lngDelta = Math.toRadians(second.longitude - first.longitude)
-    val firstLat = Math.toRadians(first.latitude)
-    val secondLat = Math.toRadians(second.latitude)
-
-    val haversine = kotlin.math.sin(latDelta / 2) * kotlin.math.sin(latDelta / 2) +
-        kotlin.math.cos(firstLat) * kotlin.math.cos(secondLat) *
-        kotlin.math.sin(lngDelta / 2) * kotlin.math.sin(lngDelta / 2)
-    val arc = 2 * kotlin.math.atan2(kotlin.math.sqrt(haversine), kotlin.math.sqrt(1 - haversine))
-    return earthRadiusMeters * arc
+fun LatLng.toGeoCoordinate(): GeoCoordinate {
+    return GeoCoordinate(
+        latitude = latitude,
+        longitude = longitude,
+    )
 }

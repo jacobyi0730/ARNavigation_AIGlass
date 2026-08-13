@@ -1,0 +1,11 @@
+/debug/*
+!/debug/README.md
+
+/arnav_*.png
+/uidump*.xml
+/window_dump*.xml
+/installed_base.apk
+/apk_inspect_*/
+/apk_main_dex_*/
+/installed_apk_*/
+/local_apk_now_*/

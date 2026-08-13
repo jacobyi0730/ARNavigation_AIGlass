@@ -220,6 +220,30 @@ API 키, 인증 비밀, 정밀 위치와 개인정보는 기록하지 않는다.
   - [x] `assembleDebug --no-daemon` 재실행으로 APK 산출 확인
 - 관련 경로: `ARNavigation/app/build`
 
+### RET-2026-08-13-011: 실기기 검증 중 우리 앱 크래시를 카메라 앱 실행으로 오인함
+
+- 상태: Resolved
+- 단계: AR/지도 통합 실기기 검증
+- 맥락: AR 셰브론 인디케이터 표시를 확인하기 위해 ADB로 앱 실행, 지도 목적지/경유지 선택, AR 복귀를 반복했다.
+- 증상/증거:
+  - `adb shell monkey -p com.wjs.arnav -c android.intent.category.LAUNCHER 1` 이후 화면 캡처가 Samsung Camera 앱으로 보였다.
+  - 실제 원인은 우리 앱 시작 직후 `ClassNotFoundException: com.wjs.arnav.MainActivity`로 크래시한 뒤, 이전/뒤 화면이 노출된 것이었다.
+  - `adb logcat -c` 후 재실행하고 `AndroidRuntime`, `ClassNotFoundException` 로그를 확인해 원인을 분리했다.
+- 영향: 잘못된 포그라운드 앱 캡처를 AR 앱 검증 결과처럼 볼 위험이 있었다.
+- 근본 원인: 검증 자동화가 화면 캡처 전에 `dumpsys window`와 `uiautomator dump`로 현재 포그라운드 패키지를 확인하지 않았다. 또한 이전 설치 APK와 로컬 APK 상태가 달라 크래시 원인 파악이 늦어졌다.
+- 해결:
+  - 최신 `app-debug.apk`를 `adb uninstall com.wjs.arnav` 후 `adb install -t`로 재설치했다.
+  - 권한을 `pm grant`로 다시 부여한 뒤 `dumpsys window`에서 `com.wjs.arnav/.MainActivity` 포커스를 확인했다.
+  - 우리 앱 포커스 상태에서 ARCore 평면 검출과 파란 셰브론 표시를 캡처로 확인했다.
+- 재발 방지:
+  - 실기기 화면 캡처 전에는 항상 `dumpsys window` 또는 `uiautomator dump`로 포그라운드 패키지가 `com.wjs.arnav`인지 확인한다.
+  - 앱이 런처로 튕기거나 다른 앱이 보이면 화면 판단 전에 `adb logcat -c` 후 재실행해서 새 crash 로그를 먼저 확인한다.
+  - APK 설치 상태가 의심되면 `adb uninstall` 후 새 빌드를 설치하고 권한을 다시 부여한다.
+- 후속 조치:
+  - [x] 최신 APK 재설치 후 우리 앱 포커스 확인
+  - [x] AR 화면에서 평면 검출과 셰브론 표시 확인
+- 관련 경로: `ARNavigation/app/build.gradle.kts`, `ARNavigation/app/src/main/java/com/wjs/arnav/feature/ar/ArCorePlaneSpikeRenderer.kt`
+
 ## 6. 새 회고 템플릿
 
 ```markdown

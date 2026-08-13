@@ -1,7 +1,6 @@
 package com.wjs.arnav.feature.ar
 
 import android.app.Activity
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.ar.core.ArCoreApk
@@ -9,6 +8,7 @@ import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.wjs.arnav.R
+import com.wjs.arnav.core.logging.AppLogger
 
 /**
  * Minimal lifecycle-aware ARCore session owner for the stage-00 spike.
@@ -32,7 +32,7 @@ class ArCoreSessionLifecycleHelper(
             when (ArCoreApk.getInstance().requestInstall(activity, !installRequested)) {
                 ArCoreApk.InstallStatus.INSTALL_REQUESTED -> {
                     installRequested = true
-                    Log.d(TAG, "ARCore install requested")
+                    AppLogger.debug(TAG, "ARCore install requested")
                     onSessionStatusChange(activity.getString(R.string.ar_spike_session_install_requested))
                     null
                 }
@@ -40,7 +40,7 @@ class ArCoreSessionLifecycleHelper(
                 ArCoreApk.InstallStatus.INSTALLED -> {
                     installRequested = false
                     Session(activity).also { createdSession ->
-                        Log.d(TAG, "ARCore session created")
+                        AppLogger.debug(TAG, "ARCore session created")
                         onSessionStatusChange(activity.getString(R.string.ar_spike_session_ready))
                         configureSession(createdSession)
                     }
@@ -63,9 +63,9 @@ class ArCoreSessionLifecycleHelper(
             configureSession(currentSession)
             currentSession.resume()
             session = currentSession
-            Log.d(TAG, "ARCore session resumed")
+            AppLogger.debug(TAG, "ARCore session resumed")
         } catch (error: CameraNotAvailableException) {
-            Log.e(TAG, "ARCore session resume failed", error)
+            AppLogger.error(TAG, "ARCore session resume failed", error)
             onSessionStatusChange(
                 activity.getString(
                     R.string.ar_spike_session_error,
@@ -76,12 +76,12 @@ class ArCoreSessionLifecycleHelper(
     }
 
     override fun onPause(owner: LifecycleOwner) {
-        Log.d(TAG, "ARCore session paused")
+        AppLogger.debug(TAG, "ARCore session paused")
         session?.pause()
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
-        Log.d(TAG, "ARCore session destroyed")
+        AppLogger.debug(TAG, "ARCore session destroyed")
         session?.close()
         session = null
     }
