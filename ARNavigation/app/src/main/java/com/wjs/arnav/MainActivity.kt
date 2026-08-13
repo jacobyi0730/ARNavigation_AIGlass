@@ -23,11 +23,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.LatLng
-import com.wjs.arnav.prototype.MapEditMode
-import com.wjs.arnav.prototype.PrototypeMapRoute
-import com.wjs.arnav.prototype.PrototypeMapState
-import com.wjs.arnav.spike.ArCoreSpikeScreen
-import com.wjs.arnav.ui.theme.ARNavigationTheme
+import com.wjs.arnav.core.ui.theme.ARNavigationTheme
+import com.wjs.arnav.feature.ar.ArCoreSpikeScreen
+import com.wjs.arnav.feature.map.MapEditMode
+import com.wjs.arnav.feature.map.PrototypeMapRoute
+import com.wjs.arnav.feature.map.PrototypeMapState
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

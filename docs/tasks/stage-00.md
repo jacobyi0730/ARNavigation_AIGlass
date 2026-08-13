@@ -1,6 +1,6 @@
 # 단계 0: 정책 확정 및 기술 스파이크
 
-- 상태: `in_progress`
+- 상태: `complete`
 - 선행 단계: 없음
 - 기본 스킬: $orchestrate-arnavigation, $implement-android-foundation
 - 상위 인덱스: [TodoList](../TodoList.md)
@@ -20,10 +20,10 @@
 
 - [x] [S00-T006] Google Cloud 프로젝트와 Android용 Maps SDK 사용 설정 절차를 정리한다.
 - [x] [S00-T007] 개발/배포용 Maps API 키 제한 정책을 패키지명과 인증서 지문 기준으로 정한다.
-- [ ] [S00-T008] ARCore가 현재 `minSdk 31`, `targetSdk 37` 및 선택할 렌더링 계층에서 빌드·실행되는지 검증한다.
+- [x] [S00-T008] ARCore가 현재 `minSdk 31`, `targetSdk 37` 및 선택할 렌더링 계층에서 빌드·실행되는지 검증한다.
 - [x] [S00-T009] 선택할 3D 렌더링 계층으로 Compose 화면 내부에 AR 카메라 뷰를 포함할 수 있는지 스파이크를 만든다.
-- [ ] [S00-T010] 수평 상향 평면 탐지와 평면 위 화살표 모델 렌더링이 가능한지 실기기에서 검증한다.
-- [ ] [S00-T011] 지도 화면과 AR 화면을 전환했을 때 카메라/AR 세션이 정상 pause/resume 되는지 검증한다.
+- [x] [S00-T010] 수평 상향 평면 탐지와 평면 위 화살표 모델 렌더링이 가능한지 실기기에서 검증한다.
+- [x] [S00-T011] 지도 화면과 AR 화면을 전환했을 때 카메라/AR 세션이 정상 pause/resume 되는지 검증한다.
 
 ### 단계 0 완료 조건
 

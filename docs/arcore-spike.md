@@ -2,54 +2,56 @@
 
 ## 범위
 
-- 대상 작업: `S00-T008`, `S00-T009`, `S00-T011`, `S00-T013`
-- 기준 날짜: 2026-08-12
+- 대상 작업: `S00-T008`, `S00-T009`, `S00-T010`, `S00-T011`, `S00-T013`
+- 기준 날짜: 2026-08-13
 
 ## 1. 결론
 
-- 현재 프로토타입의 AR 화면은 `AndroidView` 안에 CameraX `PreviewView`를 올려 후면 카메라 프리뷰를 보여준다.
-- Compose 오버레이 카드와 지도 전환 버튼을 카메라 프리뷰 위에 함께 표시할 수 있다.
-- 지원 대상 실기기에서 AR 프로토타입 화면과 지도 프로토타입 화면이 모두 실행되는 것을 확인했다.
-- 아직 ARCore `Session` 생성, 평면 탐지, AR 오브젝트 렌더링은 붙이지 않았다.
+- Compose 내부에 ARCore 기반 `GLSurfaceView`를 포함하는 스파이크를 구성했다.
+- 지원 대상 실기기에서 ARCore 설치 가능 여부와 `Session` 생성이 확인됐다.
+- 같은 실기기에서 추적 활성화, 수평 상향 평면 탐지, 평면 위 화살표 앵커 배치를 확인했다.
+- 같은 실기기에서 `AR -> Map -> AR` 전환 후 세션 `pause/resume`이 정상 동작함을 확인했다.
 
 ## 2. 현재 구현
 
 - 의존성
   - `com.google.ar:core:1.33.0`
-  - CameraX `1.6.1`
-- Manifest
-  - `CAMERA` 권한 선언
-  - `com.google.ar.core = optional` 메타데이터 선언
-- Compose 화면
+  - `de.javagl:obj:0.4.0`
+- 화면
   - `ArCoreSpikeScreen`
-  - `AndroidView` 내부 `PreviewView` 생성
-  - CameraX 후면 카메라 프리뷰 바인딩
+  - `ArCoreSessionLifecycleHelper`
+  - `ArCorePlaneSpikeRenderer`
+- 렌더링
+  - ARCore 샘플의 `BackgroundRenderer`, `PlaneRenderer`, `SampleRender` 계층 일부를 앱 내부로 복사해 사용
+  - 카메라 배경, 평면 그리드, 단순 화살표 메시 렌더링 구현
+- 상태 확인
   - `ArCoreApk.checkAvailability()` 결과 표시
-  - `Open Map` 버튼으로 지도 프로토타입 화면 이동
+  - `Session` 생성 가능 여부 표시
+  - tracking/plane/arrow 상태 문자열 표시
+  - `ArCore-SessionLifecycle`, `ArCore-ArStatus` 로그 추가
 
 ## 3. 실기기 검증
 
 - 대상 기기
   - Samsung `SM-G991N`
-- 실행 결과
-  - 2026-08-12: 앱 실행 후 AR 프로토타입 화면에서 후면 카메라 프리뷰 표시 확인
-  - 2026-08-12: 같은 기기에서 `Open Map` 버튼으로 지도 프로토타입 화면 전환 확인
-  - 2026-08-12: 지도 화면에서 Google 지도 렌더링과 하단 조작 UI 표시 확인
+- 확인 결과
+  - 2026-08-13: `ARCore availability: SUPPORTED_INSTALLED`
+  - 2026-08-13: `ARCore session probe: Session created successfully`
+  - 2026-08-13: `Tracking: Tracking the scene`
+  - 2026-08-13: `Plane: Horizontal upward plane detected`
+  - 2026-08-13: `Arrow: Arrow anchored on the detected plane`
+  - 2026-08-13: `AR -> Map -> AR` 전환 후 AR 화면 복귀 확인
+  - 2026-08-13: `adb logcat` 에서 session/renderer `paused -> resumed` 순서 확인
 - 사용 명령
+  - `.\gradlew.bat testDebugUnitTest --no-daemon`
   - `.\gradlew.bat assembleDebug --no-daemon`
   - `adb install -r app-debug.apk`
+  - `adb shell pm grant com.wjs.arnav android.permission.CAMERA`
   - `adb shell am start -n com.wjs.arnav/.MainActivity`
+  - `adb shell uiautomator dump /sdcard/*.xml`
+  - `adb logcat -d -s ArCore-SessionLifecycle ArCore-ArStatus`
 
-## 4. 아직 남은 검증
+## 4. 메모
 
-- `S00-T008`
-  - ARCore `requestInstall()` 및 `Session` 생성 확인
-- `S00-T010`
-  - 평면 탐지와 평면 위 안내 모델 렌더링 가능 여부 검증
-- `S00-T011`
-  - AR 화면과 지도 화면 전환 시 카메라/AR 세션 pause-resume 확인
-
-## 5. 다음 작업 메모
-
-- 현재 프로토타입은 "AR처럼 보이는 카메라 기반 셸" 단계다.
-- 다음 단계에서는 CameraX 프리뷰 뒤에 ARCore 세션 수명주기와 렌더러를 연결해야 한다.
+- 실기기 초기 진입 직후에는 tracking 이 잠시 `paused` 상태일 수 있었고, 장면 추적이 붙은 뒤 평면과 화살표 상태가 갱신됐다.
+- 다음 단계에서는 현재 스파이크 코드를 단계 1 패키지 구조와 실제 feature 경계에 맞게 정리할 필요가 있다.

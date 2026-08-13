@@ -1,4 +1,4 @@
-package com.wjs.arnav.prototype
+package com.wjs.arnav.feature.map
 
 import android.Manifest
 import android.content.Context
@@ -84,6 +84,9 @@ private fun PrototypeMapScreen(
 ) {
     val context = LocalContext.current
     val hasLocationPermission = rememberLocationPermissionState(context)
+    val destinationMarkerTitle = stringResource(R.string.map_marker_destination_title)
+    val destinationMarkerSnippet = stringResource(R.string.map_marker_destination_snippet)
+    val waypointMarkerSnippet = stringResource(R.string.map_marker_waypoint_snippet)
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -115,17 +118,18 @@ private fun PrototypeMapScreen(
             state.destination?.let { destination ->
                 Marker(
                     state = MarkerState(destination),
-                    title = "Destination",
-                    snippet = "Final target",
+                    title = destinationMarkerTitle,
+                    snippet = destinationMarkerSnippet,
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
                 )
             }
 
             state.waypoints.forEachIndexed { index, waypoint ->
+                val waypointMarkerTitle = context.getString(R.string.map_marker_waypoint_title, index + 1)
                 Marker(
                     state = MarkerState(waypoint),
-                    title = "Waypoint ${index + 1}",
-                    snippet = "Tap to remove",
+                    title = waypointMarkerTitle,
+                    snippet = waypointMarkerSnippet,
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
                     onClick = {
                         onStateChange(state.removeWaypoint(index))
@@ -144,7 +148,7 @@ private fun PrototypeMapScreen(
         ) {
             if (!BuildConfig.HAS_MAPS_API_KEY) {
                 StatusCard(
-                    text = "MAPS_API_KEY is missing. The prototype UI renders, but the live map may not load.",
+                    text = stringResource(R.string.map_missing_api_key),
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                 )
             }
@@ -157,9 +161,9 @@ private fun PrototypeMapScreen(
 
             StatusCard(
                 text = when (state.editMode) {
-                    MapEditMode.NONE -> "Map mode: browse"
-                    MapEditMode.DESTINATION -> "Tap the map to place the destination"
-                    MapEditMode.WAYPOINT -> "Tap the map to add waypoints (max 5)"
+                    MapEditMode.NONE -> stringResource(R.string.map_mode_browse)
+                    MapEditMode.DESTINATION -> stringResource(R.string.map_mode_destination)
+                    MapEditMode.WAYPOINT -> stringResource(R.string.map_mode_waypoint)
                 },
             )
         }
@@ -175,15 +179,19 @@ private fun PrototypeMapScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = "Prototype Map",
+                    text = stringResource(R.string.map_title),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = "Destination: ${state.destination?.toShortLabel() ?: "Not set"}",
+                    text = stringResource(
+                        R.string.map_destination_label,
+                        state.destination?.toShortLabel()
+                            ?: stringResource(R.string.map_destination_not_set),
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    text = "Waypoints: ${state.waypoints.size}/5",
+                    text = stringResource(R.string.map_waypoints_label, state.waypoints.size),
                     style = MaterialTheme.typography.bodyMedium,
                 )
 
@@ -197,7 +205,7 @@ private fun PrototypeMapScreen(
                         },
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(text = "Destination")
+                        Text(text = stringResource(R.string.map_button_destination))
                     }
                     Button(
                         onClick = {
@@ -210,7 +218,13 @@ private fun PrototypeMapScreen(
                         },
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(text = if (state.editMode == MapEditMode.WAYPOINT) "Done" else "Waypoint")
+                        Text(
+                            text = if (state.editMode == MapEditMode.WAYPOINT) {
+                                stringResource(R.string.map_button_done)
+                            } else {
+                                stringResource(R.string.map_button_waypoint)
+                            },
+                        )
                     }
                 }
 
@@ -236,7 +250,7 @@ private fun PrototypeMapScreen(
                         },
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(text = "Reset")
+                        Text(text = stringResource(R.string.map_button_reset))
                     }
                 }
 
@@ -258,7 +272,7 @@ private fun PrototypeMapScreen(
                         onClick = onNavigateToAr,
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(text = "Back To AR")
+                        Text(text = stringResource(R.string.map_button_back_to_ar))
                     }
                 }
             }

@@ -1,4 +1,4 @@
-package com.wjs.arnav.ui.theme
+package com.wjs.arnav.core.ui.theme
 
 import android.app.Activity
 import android.os.Build

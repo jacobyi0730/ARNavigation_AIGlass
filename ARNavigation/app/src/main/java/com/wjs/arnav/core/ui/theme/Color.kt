@@ -1,4 +1,4 @@
-package com.wjs.arnav.ui.theme
+package com.wjs.arnav.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

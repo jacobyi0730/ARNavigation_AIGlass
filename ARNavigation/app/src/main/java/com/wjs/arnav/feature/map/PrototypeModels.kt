@@ -1,4 +1,4 @@
-package com.wjs.arnav.prototype
+package com.wjs.arnav.feature.map
 
 import com.google.android.gms.maps.model.LatLng
 
